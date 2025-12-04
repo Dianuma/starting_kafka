@@ -6,7 +6,7 @@ permissions:
   
 on:
   pull_request:
-    types: [ opened ]
+    types: [ opened, edited, synchronize ]
 
 jobs:
     generate-pr-description:
@@ -90,10 +90,12 @@ jobs:
             run: |
               PR_NUMBER=${{ github.event.pull_request.number }}
               
-              # 1) PR body 를 파일로 저장 (필수)
-              gh pr view $PR_NUMBER --json body -q '.body' > pr_body.txt
+              PR_BODY=$(gh pr view $PR_NUMBER --json body -q '.body')
               
-              # 2) AI 결과를 안전하게 파일로 저장
+              CLEAN_BODY=$(printf "%s" "$PR_BODY" | sed -E ':a;N;$!ba;s/<!-- AI-GENERATOR:START -->.*<!-- AI-GENERATOR:END -->//g')
+              
+              echo "$CLEAN_BODY" > pr_body.txt
+              
               cat << 'EOF' > ai_summary.txt
               ${{ steps.ai.outputs.content }}
               EOF
@@ -101,11 +103,11 @@ jobs:
               {
                 cat pr_body.txt
                 echo ""
+                echo "<!-- AI-GENERATOR:START -->"
                 echo "⚙️ AI 생성 요약"
                 echo "---"
-                echo "<!-- AI_SUMMARY_START -->"
                 cat ai_summary.txt
-                echo "<!-- AI_SUMMARY_END -->"
+                echo "<!-- AI-GENERATOR:END -->"
               } > updated_body.txt
               
               # 4) 출력 확인
