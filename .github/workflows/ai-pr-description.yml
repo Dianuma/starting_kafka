@@ -1,0 +1,88 @@
+name: "AI PR Description"
+
+on:
+  pull_request:
+    types: [ opened, edited, synchronize ]
+
+jobs:
+    generate-pr-description:
+        runs-on: ubuntu-latest
+
+        steps:
+          - name: Checkout repository
+            uses: actions/checkout@v4
+
+          - name: Install jq
+            run: sudo apt-get install -y jq
+
+          - name: Install GitHub CLI
+            run: |
+              (type -p wget >/dev/null || (sudo apt update && sudo apt install wget -y))
+              sudo mkdir -p -m 755 /etc/apt/keyrings
+              out=$(mktemp)
+              wget -nv -O $out https://cli.github.com/packages/githubcli-archive-keyring.gpg
+              sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null < $out
+              sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+                | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+              sudo apt update
+              sudo apt install gh -y
+
+          - name: Get diff of the PR
+            id: diff
+            run: |
+              DIFF=$(gh pr diff ${{ github.event.pull_request.number }})
+              echo "diff<<EOF" >> $GITHUB_OUTPUT
+              echo "$DIFF" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          - name: Generate PR Description using AI
+            id: ai
+            run: |
+              cat << 'EOF' > payload.json
+              {
+                "model": "gpt-4.1-mini",
+                "messages": [
+                  {"role": "system", "content": "너는 GitHub PR 요약 전문가야."},
+                  {
+                    "role": "user",
+                    "content": "아래 diff 내용을 분석하여, '요구 사항 및 구현 내용' 섹션에 들어갈 PR 설명을 한국어로 작성해줘.\n\n요구사항:\n1) 주요 구현 내용 (핵심 포인트 Bullet 형태)\n2) 코드 변경으로 예상되는 영향 범위\n3) 리뷰어가 유의해야 할 사항(Edge case 또는 리팩터링 포인트 포함)\n\n불필요한 정보는 제외하고, 실제 리뷰 시 도움이 되는 실용적 설명만 작성해줘.\n\n--- DIFF START ---\n${{ steps.diff.outputs.diff }}\n--- DIFF END ---"
+                  }
+                ]
+              }
+              EOF
+              
+              RESPONSE=$(curl https://api.openai.com/v1/chat/completions \
+                -H "Content-Type: application/json" \
+                -H "Authorization: Bearer $OPENAI_API_KEY" \
+                -d @payload.json)
+    
+              CONTENT=$(echo $RESPONSE | jq -r ".choices[0].message.content")
+    
+              echo "content<<EOF" >> $GITHUB_OUTPUT
+              echo "$CONTENT" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+            env:
+              OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+          - name: Update PR body
+            run: |
+              PR_NUMBER=${{ github.event.pull_request.number }}
+              BRANCH_NAME=${{ github.head_ref }}
+              ISSUE_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '[0-9]+$')
+              PR_BODY=$(gh pr view $PR_NUMBER --json body -q '.body')
+              
+              
+              BODY_WITH_AI=$(echo "$PR_BODY" | sed "/<!-- AI_SUMMARY_START -->/,/<!-- AI_SUMMARY_END -->/c\\
+              <!-- AI_SUMMARY_START -->\
+              ${{ steps.ai.outputs.content }}\
+              <!-- AI_SUMMARY_END -->"
+              )
+              UPDATED_BODY=$(echo "$BODY_WITH_AI" | sed "s/- 관련 이슈 번호:.*/- 관련 이슈 번호: #$ISSUE_NUMBER/")
+              
+              gh pr edit $PR_NUMBER --body "$UPDATED_BODY"
+            env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              CONTENT: ${{ steps.ai.outputs.content }}
