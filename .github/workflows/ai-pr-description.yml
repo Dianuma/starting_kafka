@@ -81,11 +81,6 @@ jobs:
               ${{ steps.ai.outputs.content }}\
               <!-- AI_SUMMARY_END -->"
               )
-
-              echo "SAW BODY"
-              echo "$UPDATED_BODY"
-              
-              gh pr edit $PR_NUMBER --body "$UPDATED_BODY"
             env:
               GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               CONTENT: ${{ steps.ai.outputs.content }}
