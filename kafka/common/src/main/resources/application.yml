@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: common
+
+custom:
+  config:
+    kafka:
+      acks: all
+      max-retries: 5
+      retry-delay-ms: 2000
+      linger-ms: 10
+      batch-size: 16384
+      buffer-memory: 33554432
+      in-flight-requests: 1
+      enable-idempotence: true
+      dlq-suffix: .dlq
