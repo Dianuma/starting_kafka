@@ -45,6 +45,8 @@ jobs:
           - name: Generate PR Description using AI
             id: ai
             run: |
+              SAFE_DIFF=$(printf '%s' "${{ steps.diff.outputs.diff }}" | jq -Rs .)
+              
               cat << 'EOF' > payload.json
               {
                 "model": "gpt-4.1-mini",
@@ -52,7 +54,11 @@ jobs:
                   {"role": "system", "content": "너는 GitHub PR 요약 전문가야."},
                   {
                     "role": "user",
-                    "content": "아래 diff 내용을 분석하여, '요구 사항 및 구현 내용' 섹션에 들어갈 PR 설명을 한국어로 작성해줘.\n\n요구사항:\n1) 주요 구현 내용 (핵심 포인트 Bullet 형태)\n2) 코드 변경으로 예상되는 영향 범위\n3) 리뷰어가 유의해야 할 사항(Edge case 또는 리팩터링 포인트 포함)\n\n불필요한 정보는 제외하고, 실제 리뷰 시 도움이 되는 실용적 설명만 작성해줘.\n\n--- DIFF START ---\n${{ steps.diff.outputs.diff }}\n--- DIFF END ---"
+                    "content": "아래 diff 내용을 분석하여, '요구 사항 및 구현 내용' 섹션에 들어갈 PR 설명을 한국어로 작성해줘.\n\n요구사항:\n1) 주요 구현 내용 (핵심 포인트 Bullet 형태)\n2) 코드 변경으로 예상되는 영향 범위\n3) 리뷰어가 유의해야 할 사항(Edge case 또는 리팩터링 포인트 포함)\n\n불필요한 정보는 제외하고, 실제 리뷰 시 도움이 되는 실용적 설명만 작성해줘.\n\n--- DIFF START ---"
+                  },
+                  {
+                    "role": "user",
+                    "content": $SAFE_DIFF
                   }
                 ]
               }
