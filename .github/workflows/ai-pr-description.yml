@@ -42,7 +42,6 @@ jobs:
           - name: Generate PR Description using AI
             id: ai
             run: |
-              # SAFE_DIFF=$(printf '%s' "${{ steps.diff.outputs.diff }}" | jq -Rs .)
               SAFE_DIFF=$(printf '%s' "$RAW_DIFF" | base64 -w0)
               
               cat > payload.json <<__PAYLOAD__
