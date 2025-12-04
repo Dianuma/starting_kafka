@@ -75,18 +75,14 @@ jobs:
             run: |
               PR_NUMBER=${{ github.event.pull_request.number }}
               PR_BODY=$(gh pr view $PR_NUMBER --json body -q '.body')
-              echo "${{ steps.ai.outputs.content }}" > ai_summary.txt
-              gh pr view $PR_NUMBER --json body -q '.body' > pr_body.txt
-              awk -v new_block="$(cat ai_summary.txt)" '
-                BEGIN { RS=""; FS="" }
-                {
-                  sub(/<!-- AI_SUMMARY_START -->.*<!-- AI_SUMMARY_END -->/,
-                      "<!-- AI_SUMMARY_START -->\n" new_block "\n<!-- AI_SUMMARY_END -->")
-                  print
-                }
-              ' pr_body.txt > updated_body.txt
               
-              gh pr edit $PR_NUMBER --body "$(cat updated_body.txt)"
+              UPDATED_BODY=$(echo "$PR_BODY" | sed "/<!-- AI_SUMMARY_START -->/,/<!-- AI_SUMMARY_END -->/c\\
+              <!-- AI_SUMMARY_START -->\
+              ${{ steps.ai.outputs.content }}\
+              <!-- AI_SUMMARY_END -->"
+              )
+              
+              gh pr edit $PR_NUMBER --body "$UPDATED_BODY"
             env:
               GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               CONTENT: ${{ steps.ai.outputs.content }}
