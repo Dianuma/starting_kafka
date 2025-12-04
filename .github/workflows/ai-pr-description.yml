@@ -44,16 +44,16 @@ jobs:
             run: |
               SAFE_DIFF=$(printf '%s' "${{ steps.diff.outputs.diff }}" | jq -Rs .)
               
-              echo "{" > payload.json
-              echo "  \"model\": \"gpt-4.1-mini\"," >> payload.json
-              echo "  \"messages\": [" >> payload.json
-              echo "    {\"role\": \"system\", \"content\": \"너는 GitHub PR 요약 전문가야.\"}," >> payload.json
-              echo "    {\"role\": \"user\", \"content\": \"아래 diff를 기반으로 '요구 사항 및 구현 내용' 섹션에 들어갈 고품질 한국어 PR 설명을 작성해줘. 불필요한 문장은 제거하고 리뷰어에게 도움이 되는 핵심 내용만 작성해줘.\"}," >> payload.json
-              echo "    {\"role\": \"user\", \"content\": $SAFE_DIFF}" >> payload.json
-              echo "  ]" >> payload.json
-              echo "}" >> payload.json
-
-              echo @payload.json
+              cat > payload.json <<EOF
+              {
+                "model": "gpt-4.1-mini",
+                "messages": [
+                  { "role": "system", "content": "너는 GitHub PR 요약 전문가야." },
+                  { "role": "user", "content": "아래 diff를 기반으로 '요구 사항 및 구현 내용' 섹션에 들어갈 고품질 한국어 PR 설명을 작성해줘. 불필요한 문장은 제거하고 리뷰어에게 도움이 되는 핵심 내용만 작성해줘." },
+                  { "role": "user", "content": $SAFE_DIFF }
+                ]
+              }
+              EOF
               
               RESPONSE=$(curl https://api.openai.com/v1/chat/completions \
                 -H "Content-Type: application/json" \
