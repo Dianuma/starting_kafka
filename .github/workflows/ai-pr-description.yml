@@ -43,7 +43,7 @@ jobs:
             id: ai
             shell: bash
             run: |
-              DIFF=$(gh pr diff ${{ github.event.pull_request.number }})
+              DIFF=$(gh pr diff ${{ github.event.pull_request.number }} | base64 -w 0)
               cat > payload.json <<__PAYLOAD__
               {
                 "model": "gpt-4.1-mini",
