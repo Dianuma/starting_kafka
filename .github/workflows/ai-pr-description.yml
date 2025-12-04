@@ -83,14 +83,15 @@ jobs:
               ${{ steps.ai.outputs.content }}
               EOF
               
-              # 3) 안전한 교체 수행 (awk)
-              awk \
-                -v replacement="$(cat ai_summary.txt)" \
-                '{
-                   gsub(/<!-- AI_SUMMARY_START -->.*<!-- AI_SUMMARY_END -->/,
-                        "<!-- AI_SUMMARY_START -->\n" replacement "\n<!-- AI_SUMMARY_END -->")
-                   print
-                 }' pr_body.txt > updated_body.txt
+              {
+                cat pr_body.txt
+                echo ""
+                echo "⚙️ AI 생성 요약"
+                echo "---"
+                echo "<!-- AI_SUMMARY_START -->"
+                cat ai_summary.txt
+                echo "<!-- AI_SUMMARY_END -->"
+              } > updated_body.txt
               
               # 4) 출력 확인
               echo "==== UPDATED_BODY BEGIN ===="
