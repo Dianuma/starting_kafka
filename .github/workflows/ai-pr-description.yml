@@ -74,12 +74,16 @@ jobs:
           - name: Update PR body
             run: |
               PR_NUMBER=${{ github.event.pull_request.number }}
-              PR_BODY=$(gh pr view $PR_NUMBER --json body -q '.body')
               
+              # 1) PR body 를 파일로 저장 (필수)
+              gh pr view $PR_NUMBER --json body -q '.body' > pr_body.txt
+              
+              # 2) AI 결과를 안전하게 파일로 저장
               cat << 'EOF' > ai_summary.txt
               ${{ steps.ai.outputs.content }}
               EOF
-
+              
+              # 3) 안전한 교체 수행 (awk)
               awk \
                 -v replacement="$(cat ai_summary.txt)" \
                 '{
@@ -87,10 +91,14 @@ jobs:
                         "<!-- AI_SUMMARY_START -->\n" replacement "\n<!-- AI_SUMMARY_END -->")
                    print
                  }' pr_body.txt > updated_body.txt
-
+              
+              # 4) 출력 확인
               echo "==== UPDATED_BODY BEGIN ===="
-              printf '%s\n' "$UPDATED_BODY"
+              cat updated_body.txt
               echo "==== UPDATED_BODY END ===="
+              
+              # 5) PR 내용 업데이트
+              gh pr edit $PR_NUMBER --body "$(cat updated_body.txt)"
             env:
               GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               CONTENT: ${{ steps.ai.outputs.content }}
