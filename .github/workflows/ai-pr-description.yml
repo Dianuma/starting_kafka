@@ -1,5 +1,9 @@
 name: "AI PR Description"
 
+permissions:
+  contents: write
+  pull-requests: write
+  
 on:
   pull_request:
     types: [ opened, edited, synchronize ]
