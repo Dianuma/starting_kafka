@@ -6,7 +6,7 @@ permissions:
   
 on:
   pull_request:
-    types: [ opened, edited, synchronize ]
+    types: [ opened ]
 
 jobs:
     generate-pr-description:
