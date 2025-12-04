@@ -47,7 +47,7 @@ jobs:
             run: |
               SAFE_DIFF=$(printf '%s' "${{ steps.diff.outputs.diff }}" | jq -Rs .)
               
-              cat << 'EOF' > payload.json
+              cat << EOF > payload.json
               {
                 "model": "gpt-4.1-mini",
                 "messages": [
