@@ -52,6 +52,8 @@ jobs:
               echo "    {\"role\": \"user\", \"content\": $SAFE_DIFF}" >> payload.json
               echo "  ]" >> payload.json
               echo "}" >> payload.json
+
+              echo @payload.json
               
               RESPONSE=$(curl https://api.openai.com/v1/chat/completions \
                 -H "Content-Type: application/json" \
