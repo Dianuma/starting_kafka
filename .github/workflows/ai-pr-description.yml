@@ -81,6 +81,10 @@ jobs:
               ${{ steps.ai.outputs.content }}\
               <!-- AI_SUMMARY_END -->"
               )
+
+              echo "==== UPDATED_BODY BEGIN ===="
+              printf '%s\n' "$UPDATED_BODY"
+              echo "==== UPDATED_BODY END ===="
             env:
               GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               CONTENT: ${{ steps.ai.outputs.content }}
