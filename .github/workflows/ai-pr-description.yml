@@ -43,8 +43,8 @@ jobs:
             id: ai
             shell: bash
             run: |
-              SAFE_DIFF=$(printf '%s' "${{ steps.diff.outputs.diff }}" | jq -Rs .)
-              
+              echo "${{ steps.diff.outputs.diff }}" > diff_raw.txt
+              SAFE_DIFF=$(jq -Rs . < diff_raw.txt)
               cat > payload.json <<__PAYLOAD__
               {
                 "model": "gpt-4.1-mini",
