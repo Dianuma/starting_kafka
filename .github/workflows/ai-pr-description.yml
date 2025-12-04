@@ -44,7 +44,7 @@ jobs:
             run: |
               SAFE_DIFF=$(printf '%s' "${{ steps.diff.outputs.diff }}" | jq -Rs .)
               
-              cat > payload.json <<EOF
+              cat > payload.json <<__PAYLOAD__
               {
                 "model": "gpt-4.1-mini",
                 "messages": [
@@ -53,7 +53,7 @@ jobs:
                   { "role": "user", "content": $SAFE_DIFF }
                 ]
               }
-              EOF
+              __PAYLOAD__
               
               RESPONSE=$(curl https://api.openai.com/v1/chat/completions \
                 -H "Content-Type: application/json" \
