@@ -43,15 +43,13 @@ jobs:
             id: ai
             shell: bash
             run: |
-              echo "${{ steps.diff.outputs.diff }}" > diff_raw.txt
-              SAFE_DIFF=$(jq -Rs . < diff_raw.txt)
               cat > payload.json <<__PAYLOAD__
               {
                 "model": "gpt-4.1-mini",
                 "messages": [
                   { "role": "system", "content": "너는 GitHub PR 요약 전문가야." },
                   { "role": "user", "content": "아래 diff는 base64 로 인코딩된 내용이다. base64 decode 후, 해당 내용을 기반으로 '요구 사항 및 구현 내용' 섹션에 들어갈 고품질 한국어 PR 설명을 작성해줘. 불필요한 문장은 제거하고 리뷰어에게 도움이 되는 핵심 내용만 작성해줘." },
-                  { "role": "user", "content": $SAFE_DIFF }
+                  { "role": "user", "content": $(gh pr diff ${{ github.event.pull_request.number }}) }
                 ]
               }
               __PAYLOAD__
