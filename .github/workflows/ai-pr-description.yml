@@ -38,6 +38,8 @@ jobs:
           - name: Generate PR Description using AI
             id: ai
             run: |
+              SAFE_DIFF=$(printf '%s' "${{ steps.diff.outputs.diff }}" | jq -Rs .)
+              
               echo "{" > payload.json
               echo "  \"model\": \"gpt-4.1-mini\"," >> payload.json
               echo "  \"messages\": [" >> payload.json
