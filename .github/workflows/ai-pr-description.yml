@@ -59,8 +59,9 @@ jobs:
                 -H "Content-Type: application/json" \
                 -H "Authorization: Bearer $OPENAI_API_KEY" \
                 -d @payload.json)
-              
-    
+
+              echo "DISPLAY RESPONSE"
+              echo "$RESPONSE"
               CONTENT=$(echo $RESPONSE | jq -r ".choices[0].message.content")
     
               echo "content<<EOF" >> $GITHUB_OUTPUT
