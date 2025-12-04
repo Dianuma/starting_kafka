@@ -67,6 +67,7 @@ jobs:
               echo "$CONTENT" >> $GITHUB_OUTPUT
               echo "EOF" >> $GITHUB_OUTPUT
             env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
           - name: Update PR body
