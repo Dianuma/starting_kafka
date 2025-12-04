@@ -1,0 +1,135 @@
+services:
+  # MySQL Database Service
+  mysql-product:
+    image: mysql:${MYSQL_VERSION}
+    container_name: mysql-product
+    restart: always
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_PRODUCT_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  mysql-order:
+    image: mysql:${MYSQL_VERSION}
+    container_name: mysql-order
+    restart: always
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_ORDER_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # Kafka Cluster Services
+  kafka-1:
+    image: apache/kafka:${KAFKA_VERSION}
+    container_name: kafka-1
+    hostname: kafka-1
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_NODE_ID=1
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_LISTENERS=CONTROLLER://:9091,PLAINTEXT://:9092,EXTERNAL://:29092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka-1:9092,EXTERNAL://localhost:29092
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka-1:9091,2@kafka-2:9091,3@kafka-3:9091
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CLUSTER_ID=${KAFKA_CLUSTER_ID}
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR}
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR}
+      - KAFKA_MIN_INSYNC_REPLICAS=${KAFKA_MIN_INSYNC_REPLICAS}
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=${KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS}
+      - TZ=${TZ}
+    volumes:
+      - ./kafka-scripts:/scripts
+      - ./kafka-data-1:/var/lib/kafka/data
+    networks:
+      - ${NETWORK_NAME}
+
+  kafka-2:
+    image: apache/kafka:${KAFKA_VERSION}
+    container_name: kafka-2
+    hostname: kafka-2
+    ports:
+      - "9094:9092"
+      - "39092:29092"
+    environment:
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_NODE_ID=2
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_LISTENERS=CONTROLLER://:9091,PLAINTEXT://:9092,EXTERNAL://:39092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka-2:9092,EXTERNAL://localhost:39092
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka-1:9091,2@kafka-2:9091,3@kafka-3:9091
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CLUSTER_ID=${KAFKA_CLUSTER_ID}
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR}
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR}
+      - KAFKA_MIN_INSYNC_REPLICAS=${KAFKA_MIN_INSYNC_REPLICAS}
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=${KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS}
+      - TZ=${TZ}
+    volumes:
+      - ./kafka-scripts:/scripts
+      - ./kafka-data-2:/var/lib/kafka/data
+    networks:
+      - ${NETWORK_NAME}
+
+  kafka-3:
+    image: apache/kafka:${KAFKA_VERSION}
+    container_name: kafka-3
+    hostname: kafka-3
+    ports:
+      - "9096:9092"
+      - "49092:29092"
+    environment:
+      - KAFKA_PROCESS_ROLES=controller,broker
+      - KAFKA_NODE_ID=3
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - KAFKA_LISTENERS=CONTROLLER://:9091,PLAINTEXT://:9092,EXTERNAL://:39092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka-3:9092,EXTERNAL://localhost:39092
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka-1:9091,2@kafka-2:9091,3@kafka-3:9091
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CLUSTER_ID=${KAFKA_CLUSTER_ID}
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=${KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR}
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=${KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR}
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=${KAFKA_TRANSACTION_STATE_LOG_MIN_ISR}
+      - KAFKA_MIN_INSYNC_REPLICAS=${KAFKA_MIN_INSYNC_REPLICAS}
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=${KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS}
+      - TZ=${TZ}
+    volumes:
+      - ./kafka-scripts:/scripts
+      - ./kafka-data-3:/var/lib/kafka/data
+    networks:
+      - ${NETWORK_NAME}
+
+  kafka-init:
+    image: apache/kafka:${KAFKA_VERSION}
+    container_name: kafka-init
+    depends_on:
+      - kafka-1
+      - kafka-2
+      - kafka-3
+    volumes:
+      - ./kafka-scripts:/scripts
+    entrypoint: ["/bin/bash", "-c", "/scripts/init-topics.sh"]
+    restart: "no"
+    networks:
+      - ${NETWORK_NAME}
+
+networks:
+  gooream-net:
+    driver: bridge
