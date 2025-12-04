@@ -1,5 +1,9 @@
 name: "AI PR Description"
 
+permissions:
+  contents: write
+  pull-requests: write
+  
 on:
   pull_request:
     types: [ opened, edited, synchronize ]
@@ -19,7 +23,7 @@ jobs:
               ISSUE_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '[0-9]+$')
               PR_BODY=$(gh pr view $PR_NUMBER --json body -q '.body')
 
-              UPDATED_BODY=$(echo "$BODY_WITH_AI" | sed "s/- 관련 이슈 번호:.*/- 관련 이슈 번호: #$ISSUE_NUMBER/")
+              UPDATED_BODY=$(echo "$PR_BODY" | sed "s/- 관련 이슈 번호:.*/- 관련 이슈 번호: #$ISSUE_NUMBER/")
 
               gh pr edit $PR_NUMBER --body "$UPDATED_BODY"
             env:
@@ -66,17 +70,13 @@ jobs:
           - name: Update PR body
             run: |
               PR_NUMBER=${{ github.event.pull_request.number }}
-              BRANCH_NAME=${{ github.head_ref }}
-              ISSUE_NUMBER=$(echo "$BRANCH_NAME" | grep -oE '[0-9]+$')
               PR_BODY=$(gh pr view $PR_NUMBER --json body -q '.body')
               
-              
-              BODY_WITH_AI=$(echo "$PR_BODY" | sed "/<!-- AI_SUMMARY_START -->/,/<!-- AI_SUMMARY_END -->/c\\
+              UPDATED_BODY=$(echo "$PR_BODY" | sed "/<!-- AI_SUMMARY_START -->/,/<!-- AI_SUMMARY_END -->/c\\
               <!-- AI_SUMMARY_START -->\
               ${{ steps.ai.outputs.content }}\
               <!-- AI_SUMMARY_END -->"
               )
-              UPDATED_BODY=$(echo "$BODY_WITH_AI" | sed "s/- 관련 이슈 번호:.*/- 관련 이슈 번호: #$ISSUE_NUMBER/")
               
               gh pr edit $PR_NUMBER --body "$UPDATED_BODY"
             env:
