@@ -109,7 +109,6 @@ jobs:
               
               {
                 cat pr_body.txt
-                echo ""
                 echo "<!-- AI-GENERATOR:START -->"
                 echo "⚙️ AI 생성 요약"
                 echo "---"
