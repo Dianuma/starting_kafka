@@ -19,7 +19,7 @@ jobs:
           - name: Update Issue number in PR body
             run: |
               PR_NUMBER=${{ github.event.pull_request.number }}
-              $TITLE="${{ github.event.pull_request.title }}"
+              TITLE="${{ github.event.pull_request.title }}"
               ISSUE_NUMBER=$(echo "$TITLE" | grep -oP '\[\K[0-9]+(?=\])' | head -1)
               PR_BODY=$(gh pr view $PR_NUMBER --json body -q '.body')
 
